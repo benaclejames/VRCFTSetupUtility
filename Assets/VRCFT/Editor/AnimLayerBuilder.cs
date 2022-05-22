@@ -1,17 +1,38 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
 namespace Editor
 {
-    public static class AnimLayerBuilder
+    public class AnimLayerBuilder
     {
-        public static AnimatorControllerLayer BuildFloat(string name,
-            ZeroToValueAnimPair pair)
+        public string Name;
+        public Dictionary<float, AnimationClip> Clips;
+        
+        public AnimLayerBuilder(string name, Dictionary<float, AnimationClip> clips)
         {
+            Name = name;
+            Clips = clips;
+        }
+
+        public void BuildFloat(ref AnimatorController controller, bool createParam = true)
+        {
+            if (createParam)
+            {
+                var containsParamAlready = false;
+                foreach (var param in controller.parameters)
+                    if (param.name == Name)
+                        containsParamAlready = true;
+                
+                if (!containsParamAlready)
+                    controller.AddParameter(Name, AnimatorControllerParameterType.Float);
+            }
+
             var layer = new AnimatorControllerLayer
             {
-                name = name,
+                name = Name,
                 stateMachine = new AnimatorStateMachine
                 {
                     hideFlags = HideFlags.HideInHierarchy
@@ -24,22 +45,23 @@ namespace Editor
                 blendType = BlendTreeType.Simple1D,
                 hideFlags = HideFlags.HideInHierarchy,
                 useAutomaticThresholds = false,
-                blendParameter = "JawOpen",
+                blendParameter = Name,
                 name = "FloatBlendTree"
             };
-            
-            tree.AddChild(pair.ZeroClip);
-            tree.AddChild(pair.ValueClip, 1);
+
+            foreach (var clip in Clips)
+                tree.AddChild(clip.Value, clip.Key);
 
             var blendState = new AnimatorState
             {
                 name = "FloatBlendState",
                 motion = tree
             };
-            
+
             layer.stateMachine.AddState(blendState, new Vector3(0, 0));
             layer.stateMachine.defaultState = blendState;
-            return layer;
+            
+            controller.AddLayer(layer);
         }
     }
 }

@@ -20,6 +20,7 @@ public class VRCFTRecordBlendshapes : EditorWindow
     }
 
     private VRCAvatarDescriptor avatarDescriptor;
+    private ParamMeta paramMeta;
     private Animator targetAnimator;
     private AnimatorController fxController;
     private MRBlendshapeSaveState[] ChildRendererStates;
@@ -35,84 +36,125 @@ public class VRCFTRecordBlendshapes : EditorWindow
     }
 
     private bool isRecording;
-    private Dictionary<string, List<ZeroToValueAnimPair>> animPairs = new Dictionary<string, List<ZeroToValueAnimPair>>();
+    private List<ParamData> ParamData = new List<ParamData>();
 
 
     void OnGUI()
     {
-        if (!isRecording || avatarDescriptor == null || ChildRendererStates == null)
+        // Double check we have an avatar descriptor and child renderer states
+        if (avatarDescriptor == null || paramMeta == null || ChildRendererStates == null)
+            isRecording = false;    // Set isRecording to false since we can't record without these two things
+        
+        if (!isRecording)
         {
             // Create object field for skinned mesh renderer
             avatarDescriptor =
                 (VRCAvatarDescriptor) EditorGUILayout.ObjectField("Avatar Descriptor", avatarDescriptor,
                     typeof(VRCAvatarDescriptor), true);
-
+            
+            paramMeta =
+                (ParamMeta) EditorGUILayout.ObjectField("Parameter Meta", paramMeta,
+                    typeof(ParamMeta), false);
+            
             // Create a button
+            GUI.enabled = avatarDescriptor != null && paramMeta != null;
             if (GUILayout.Button("Start!"))
-            {
-                // print all blendshape values of skinnedmeshrenderer
-                targetAnimator = avatarDescriptor.GetComponent<Animator>();
-                fxController =
-                    (AnimatorController) avatarDescriptor.baseAnimationLayers.First(layer =>
-                        layer.type == VRCAvatarDescriptor.AnimLayerType.FX).animatorController;
-
-                if (targetAnimator != null && fxController != null)
-                {
-                    ChildRendererStates = ConstructChildRendererSaveStates().ToArray();
-                    animPairs = new Dictionary<string, List<ZeroToValueAnimPair>>()
-                    {
-                        {"JawOpen", null},
-                        {"JawClose", null},
-                        {"JawFwd", null},
-                    };
-                    isRecording = true;
-                }
-            }
+                BeginRecording();
+            GUI.enabled = true;
         }
-        else
+        
+        if (isRecording)    // If we're currently recording
         {
+            // Create the next anim
+            var currentShape = ParamData.First(item => !item.IsAssigned());
+            GUILayout.Label("Currently Animating: "+currentShape.Name, EditorStyles.boldLabel);
+            
             if (GUILayout.Button("Next"))
             {
-                // print all blendshape values of skinnedmeshrenderer
-                if (targetAnimator == null || animPairs.All(item => item.Value != null))
-                {
-                    isRecording = false;
-                    return;
-                }
-
-                string currentShape = animPairs.First(item => item.Value == null).Key;
-
-                if (!AssetDatabase.IsValidFolder("Assets/VRCFT/Animations"))
-                    AssetDatabase.CreateFolder("Assets/VRCFT", "Animations");
-
-                AssetDatabase.CreateFolder("Assets/VRCFT/Animations", targetAnimator.name);
-
-                List<ZeroToValueAnimPair> pairs = new List<ZeroToValueAnimPair>();
                 foreach (var saveState in ChildRendererStates) // For every child renderer
                 {
                     // Get current diff
                     var currentSave = new MRBlendshapeSaveState(saveState.renderer);
                     var diff = currentSave - saveState;
+                    MRBlendshapeSaveState.PruneUnchanged(ref currentSave, ref diff);
 
                     // Reset back to original state
                     saveState.Restore();
+                    
+                    // If there isn't a diff, skip
+                    if (diff.savedBlendshapes.All(item => item.Value == 0))
+                        continue;
 
                     // Create the zero and 100 anim clips and save them
-                    var pair = new ZeroToValueAnimPair(currentShape, saveState, diff);
-                    var saveDir = $"Assets/VRCFT/Animations/{targetAnimator.name}/{saveState.renderer.name}";
-                    Directory.CreateDirectory(saveDir);
-                    pair.SaveToAsset(saveDir);
-                    AssetDatabase.SaveAssets();
-
-                    pairs.Add(pair);
+                    currentShape.SaveStates.Add((saveState, diff));
                 }
+            }
 
-                animPairs[currentShape] = pairs;
-
-                // Create the anim layer for the blendshape
-                //var layer = AnimLayerBuilder.BuildFloat(saveState.renderer.name, pair);
-                //fxController.AddLayer(layer);
+            if (GUILayout.Button("Cancel"))
+            {
+                isRecording = false;
+                return;
+            }
+            
+            // If we've fufilled every pair requirement, save the anims and create state machines
+            if (ParamData.All(item => item.IsAssigned()))
+            {
+                isRecording = false;
+                SaveAndState();
+                return;
             }
         }
+    }
+
+    void BeginRecording()
+    {
+        targetAnimator = avatarDescriptor.GetComponent<Animator>();
+        fxController =
+            (AnimatorController) avatarDescriptor.baseAnimationLayers.First(layer =>
+                layer.type == VRCAvatarDescriptor.AnimLayerType.FX).animatorController;
+
+        if (targetAnimator != null && fxController != null)
+        {
+            ChildRendererStates = ConstructChildRendererSaveStates().ToArray();
+            ParamData = new List<ParamData>()
+            {
+                new ParamData("JawOpen", ParamMeta.ParameterType.Float),
+                new ParamData("JawX", ParamMeta.ParameterType.Float),
+                new ParamData("SmileSad", ParamMeta.ParameterType.Float),
+            };
+            isRecording = true;
+        }
+    }
+
+    void SaveAndState()
+    {
+        EnsureFolder("Assets/VRCFT", "Animations");
+        var saveDir = EnsureFolder("Assets/VRCFT/Animations", targetAnimator.name);
+
+        foreach (var shape in ParamData)
+        {
+            // Save Anims
+            var pair = new LinearAnimSet(shape.Name);
+            foreach (var state in shape.SaveStates)
+            {
+                pair.AddState(state.Zero, 0);
+                pair.AddState(state.Value, 1);
+            }
+
+            pair.SaveToAsset(saveDir);
+            AssetDatabase.SaveAssets();
+            
+            // Add anim to layer
+            var layer = new AnimLayerBuilder(shape.Name, pair.Clips);
+            layer.BuildFloat(ref fxController);
+        }
+    }
+
+    static string EnsureFolder(string parent, string child)
+    {
+        if (!AssetDatabase.IsValidFolder(parent + "/" + child))
+            AssetDatabase.CreateFolder(parent, child);
+
+        return parent + "/" + child;
     }
 }

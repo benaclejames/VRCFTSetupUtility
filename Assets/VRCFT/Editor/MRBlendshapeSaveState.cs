@@ -1,18 +1,17 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace Editor
 {
     public class MRBlendshapeSaveState
     {
-        public float[] savedBlendshapes;
+        public Dictionary<int, float> savedBlendshapes = new Dictionary<int, float>();
         public SkinnedMeshRenderer renderer;
         
         public MRBlendshapeSaveState(SkinnedMeshRenderer renderer)
         {
             this.renderer = renderer;
-            
-            savedBlendshapes = new float[renderer.sharedMesh.blendShapeCount];
-            
+
             for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
             {
                 savedBlendshapes[i] = renderer.GetBlendShapeWeight(i);
@@ -24,6 +23,20 @@ namespace Editor
             for (int i = 0; i < renderer.sharedMesh.blendShapeCount; i++)
             { 
                 renderer.SetBlendShapeWeight(i, savedBlendshapes[i]);
+            }
+        }
+
+        public static void PruneUnchanged(ref MRBlendshapeSaveState zeroState, ref MRBlendshapeSaveState diffState)
+        {
+            // Go through and find any blendshapes that are the same, then remove them from both the zeroState and diffState
+            int origCount = diffState.savedBlendshapes.Count;
+            for (int i = 0; i < origCount; i++)
+            {
+                if (diffState.savedBlendshapes[i] == 0)
+                {
+                    zeroState.savedBlendshapes.Remove(i);
+                    diffState.savedBlendshapes.Remove(i);
+                }
             }
         }
 
