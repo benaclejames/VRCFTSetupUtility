@@ -23,7 +23,6 @@ public class VRCFTRecordBlendshapes : EditorWindow
     private ParamMeta paramMeta;
     private Animator targetAnimator;
     private AnimatorController fxController;
-    private MRBlendshapeSaveState[] ChildRendererStates;
 
     List<MRBlendshapeSaveState> ConstructChildRendererSaveStates()
     {
@@ -42,7 +41,7 @@ public class VRCFTRecordBlendshapes : EditorWindow
     void OnGUI()
     {
         // Double check we have an avatar descriptor and child renderer states
-        if (avatarDescriptor == null || paramMeta == null || ChildRendererStates == null)
+        if (avatarDescriptor == null || paramMeta == null)
             isRecording = false;    // Set isRecording to false since we can't record without these two things
         
         if (!isRecording)
@@ -65,28 +64,30 @@ public class VRCFTRecordBlendshapes : EditorWindow
         
         if (isRecording)    // If we're currently recording
         {
+            // TODO: Handle multiple diffs
+            
             // Create the next anim
             var currentShape = ParamData.First(item => !item.IsAssigned());
             GUILayout.Label("Currently Animating: "+currentShape.Name, EditorStyles.boldLabel);
             
             if (GUILayout.Button("Next"))
             {
-                foreach (var saveState in ChildRendererStates) // For every child renderer
+                foreach (var zeroState in currentShape.AnimationSteps[currentShape.DefaultStep]) // For every child renderer
                 {
                     // Get current diff
-                    var currentSave = new MRBlendshapeSaveState(saveState.renderer);
-                    var diff = currentSave - saveState;
+                    var currentSave = new MRBlendshapeSaveState(zeroState.renderer);
+                    var diff = currentSave - zeroState;
                     MRBlendshapeSaveState.PruneUnchanged(ref currentSave, ref diff);
 
                     // Reset back to original state
-                    saveState.Restore();
+                    zeroState.Restore();
                     
                     // If there isn't a diff, skip
                     if (diff.savedBlendshapes.All(item => item.Value == 0))
                         continue;
 
                     // Create the zero and 100 anim clips and save them
-                    currentShape.SaveStates.Add((saveState, diff));
+                    currentShape.AnimationSteps[1].Add(diff);
                 }
             }
 
@@ -115,12 +116,12 @@ public class VRCFTRecordBlendshapes : EditorWindow
 
         if (targetAnimator != null && fxController != null)
         {
-            ChildRendererStates = ConstructChildRendererSaveStates().ToArray();
+            var saveStates = ConstructChildRendererSaveStates();
             ParamData = new List<ParamData>()
             {
-                new ParamData("JawOpen", ParamMeta.ParameterType.Float),
-                new ParamData("JawX", ParamMeta.ParameterType.Float),
-                new ParamData("SmileSad", ParamMeta.ParameterType.Float),
+                new ParamData("JawOpen", ParamMeta.ParameterType.Float, new []{0f, 1f}, saveStates),
+                new ParamData("JawX", ParamMeta.ParameterType.Float, new []{0f, 1f}, saveStates),
+                new ParamData("SmileSad", ParamMeta.ParameterType.Float, new []{0f, 1f}, saveStates),
             };
             isRecording = true;
         }
@@ -135,10 +136,10 @@ public class VRCFTRecordBlendshapes : EditorWindow
         {
             // Save Anims
             var pair = new LinearAnimSet(shape.Name);
-            foreach (var state in shape.SaveStates)
+            foreach (var step in shape.AnimationSteps)
             {
-                pair.AddState(state.Zero, 0);
-                pair.AddState(state.Value, 1);
+                foreach (var saveState in step.Value)
+                    pair.AddState(saveState, step.Key);
             }
 
             pair.SaveToAsset(saveDir);
@@ -146,7 +147,11 @@ public class VRCFTRecordBlendshapes : EditorWindow
             
             // Add anim to layer
             var layer = new AnimLayerBuilder(shape.Name, pair.Clips);
-            layer.BuildFloat(ref fxController);
+            
+            if (shape.Type == ParamMeta.ParameterType.Float)
+            {
+                layer.BuildFloat(ref fxController);
+            }
         }
     }
 
