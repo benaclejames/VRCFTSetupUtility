@@ -37,9 +37,22 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
             var saveStates = Utils.ConstructChildRendererSaveStates(avatar.transform);
             ParamData = new List<ParamData>()
             {
-                new ParamData("JawOpen", ParamMeta.ParameterType.Float, new[] {-1f, 0f, 1f}, saveStates),
-                new ParamData("JawX", ParamMeta.ParameterType.Float, new[] {0f, 1f}, saveStates),
-                new ParamData("SmileSad", ParamMeta.ParameterType.Float, new[] {0f, 1f}, saveStates),
+                new ParamData("JawOpen", ParamMeta.ParameterType.Float, new[]
+                {
+                    ("Negative State", -1f), 
+                    ("Zero Step", 0f), 
+                    ("Value Step", 1f)
+                }, saveStates),
+                new ParamData("JawX", ParamMeta.ParameterType.Float, new[] {
+                    ("Zero Step", 0f), 
+                    ("Value Step", 1f)
+                    
+                }, saveStates),
+                new ParamData("SmileSad", ParamMeta.ParameterType.Float, new[]
+                {
+                    ("Zero Step", 0f), 
+                    ("Value Step", 1f)
+                }, saveStates),
             };
 
             return true;
@@ -57,7 +70,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 foreach (var step in shape.AnimationSteps)
                 {
                     foreach (var saveState in step.Value)
-                        pair.AddState(saveState, step.Key);
+                        pair.AddState(saveState, step.Key.stepValue);
                 }
 
                 pair.SaveToAsset(saveDir);

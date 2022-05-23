@@ -4,11 +4,11 @@
     "type": 0,
     "animatorLayer": 5, // AnimLayerType enum. FX is 5.
     "data": {
-      "states": [
-        -1.0,
-        0.0,
-        1.0
-      ],
+      "states": {
+        "Jaw Reversed": -1.0,
+        "Jaw Closed": 0.0,
+        "Jaw Open": 1.0
+      },
       "defaultState": 0.0
     },
     "examples": {
@@ -21,10 +21,11 @@
     "type": 0,
     "animatorLayer": 5,
     "data": {
-      "states": [
-        0.0,
-        1.0
-      ],
+      "states": {
+        "Jaw Left": -1.0,
+        "Jaw Center": 0.0,
+        "Jaw Right": 1.0
+      },
       "defaultState": 0.0,
       "steps": 8
     }

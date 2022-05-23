@@ -77,7 +77,8 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
             var remainingSteps = nextData.AnimationSteps.Where(item => item.Value.Count == 0);
             var currentStep = remainingSteps.First();
 
-            GUILayout.Label("Animating value: " + currentStep.Key + ". " + (-1+remainingSteps.Count()) + " steps remaining.", EditorStyles.boldLabel);
+            GUILayout.Label("Animating step name: " + currentStep.Key.stepName + " of value: " + currentStep.Key.stepValue, EditorStyles.boldLabel);
+            GUILayout.Label((-1+remainingSteps.Count()) + " steps remaining.");
             
             // If the next button isn't currently being pressed, return.
             if (!GUILayout.Button("Next")) return;
