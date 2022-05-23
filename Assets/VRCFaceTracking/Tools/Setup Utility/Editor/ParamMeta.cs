@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Editor
+namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 {
     [CreateAssetMenu(fileName = "Parameter Meta", menuName = "VRCFT/Parameter Meta")]
-    public class ParamMeta : ScriptableObject
+    public class ParamMeta
     {
         public enum ParameterType
         {

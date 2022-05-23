@@ -1,0 +1,32 @@
+﻿[
+  {
+    "name": "JawOpen",
+    "type": 0,
+    "animatorLayer": 5, // AnimLayerType enum. FX is 5.
+    "data": {
+      "states": [
+        -1.0,
+        0.0,
+        1.0
+      ],
+      "defaultState": 0.0
+    },
+    "examples": {
+      "human": "https://camo.githubusercontent.com/37708d8d218e77ef8aef71666e4af4bd5796043f9644a7c7c0b07ae6171d2ec6/68747470733a2f2f696d6775722e636f6d2f796c687a70794a2e6a7067",
+      "furry": "https://meme.png"
+    }
+  },
+  {
+    "name": "JawX",
+    "type": 0,
+    "animatorLayer": 5,
+    "data": {
+      "states": [
+        0.0,
+        1.0
+      ],
+      "defaultState": 0.0,
+      "steps": 8
+    }
+  }
+]

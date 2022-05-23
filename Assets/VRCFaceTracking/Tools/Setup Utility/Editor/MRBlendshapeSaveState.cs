@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Editor
+namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 {
     public class MRBlendshapeSaveState
     {

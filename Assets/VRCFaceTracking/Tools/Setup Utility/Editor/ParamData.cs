@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace Editor
+namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 {
     public struct ParamData
     {
@@ -27,5 +26,6 @@ namespace Editor
         public Dictionary<float /*-1,0,1*/, List<MRBlendshapeSaveState>/*One for every renderer*/> AnimationSteps;
 
         public bool IsAssigned() => AnimationSteps.All(kvp => kvp.Value.Count != 0);
+        public List<MRBlendshapeSaveState> GetDefaultValues() => AnimationSteps[DefaultStep];
     }
 }

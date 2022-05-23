@@ -2,7 +2,7 @@
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace Editor
+namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 {
     public class AnimLayerBuilder
     {

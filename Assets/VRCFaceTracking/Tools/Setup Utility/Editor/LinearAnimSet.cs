@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Editor
+namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 {
     // Creates two animation clips to blend between. One for the target value and one for the 
     public class LinearAnimSet
