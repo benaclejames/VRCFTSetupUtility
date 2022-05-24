@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net;
 using UnityEditor;
 using UnityEngine;
 
@@ -23,6 +24,17 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
             }
 
             return saveStates;
+        }
+        
+        public static Texture2D DownloadImage(string url)
+        {
+            var tex = new Texture2D(200, 200);
+            using (WebClient client = new WebClient())
+            {
+                byte[] data = client.DownloadData(url);
+                tex.LoadImage(data);
+            }
+            return tex;
         }
     }
 }
