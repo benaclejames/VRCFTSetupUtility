@@ -18,6 +18,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
     {
         public List<State> states { get; set; }
         public double? defaultState { get; set; }
+        public int? binaryRes { get; set; }
     }
 
     public class Example

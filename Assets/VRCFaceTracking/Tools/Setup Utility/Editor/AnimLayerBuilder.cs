@@ -78,7 +78,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 
             // Count in base2
             List<int> requiredBits = new List<int>();
-            for (int count = 1; count <= binaryRes; count *= 2)
+            for (int count = 1; count <= binaryRes-1; count *= 2)   // subtract 1 since 0 counts as a possible value
             {
                 requiredBits.Add(count);
                 EnsureParam(ref controller, Name+count, AnimatorControllerParameterType.Bool);
@@ -126,8 +126,20 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 
                 //TODO: Make this go in a spinny circle
                 var x = 0;
-                var y = 0;
+                var y = i*20;
                 layer.stateMachine.AddState(blendState, new Vector3(x, y));
+
+                var transition = layer.stateMachine.AddAnyStateTransition(blendState);
+                for (int shift = 0; shift < requiredBits.Count; shift++)
+                {
+                    bool paramState = ((Mathf.Abs(i) >> shift) & 1) == 1;
+                    transition.AddCondition(paramState ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0,
+                        Name + requiredBits[shift]);
+                }
+                if (i < 0)
+                    transition.AddCondition(AnimatorConditionMode.If, 0, Name+"Negative");
+                else if (i > 0)
+                    transition.AddCondition(AnimatorConditionMode.IfNot, 0, Name+"Negative");
             }
             
             controller.AddLayer(layer);
