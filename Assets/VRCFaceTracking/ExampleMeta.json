@@ -1,0 +1,85 @@
+﻿{
+"parameters" :[
+  {
+    "name": "JawOpen",
+    "type": 0,
+    "animatorLayer": 5,
+    "data": {
+      "states": [
+        {
+          "name": "Jaw Closed",
+          "pos": 0.0,
+          "desc": "Basically the default position",
+          "examples": [
+            {
+              "type": "human",
+              "url": "https://camo.githubusercontent.com/89ad6a2d5b31b887546ed864be2167cc046f99afafc48fddfbc9942a7b6c4f6b/68747470733a2f2f696d6775722e636f6d2f32394c39694b542e6a7067"
+            }
+          ]
+        },
+        {
+          "name": "Jaw Open",
+          "pos": 1.0,
+          "examples": [
+            {
+              "type": "human",
+              "url": "https://camo.githubusercontent.com/37708d8d218e77ef8aef71666e4af4bd5796043f9644a7c7c0b07ae6171d2ec6/68747470733a2f2f696d6775722e636f6d2f796c687a70794a2e6a7067"
+            },
+            {
+              "type": "furry",
+              "url": "https://google.com"
+            }
+          ]
+        }
+      ],
+      "defaultState": 0.0
+    }
+  },
+  {
+    "name": "JawX",
+    "type": 1,
+    "animatorLayer": 5,
+    "data": {
+      "binaryRes": 8,
+      "states": [
+        {
+          "name": "Jaw Right",
+          "pos": 1.0,
+          "examples": [
+            {
+              "type": "human",
+              "url": "https://camo.githubusercontent.com/4a5e92910bbe5bdd0fcbfb2db43610bfa671426da65539827d2bb83cef03ae0a/68747470733a2f2f696d6775722e636f6d2f507154434771472e6a7067"
+            }
+          ]
+        },
+        {
+          "name": "Jaw Center",
+          "pos": 0.0,
+          "desc": "The default position for most jaws",
+          "examples": [
+            {
+              "type": "human",
+              "url": "https://camo.githubusercontent.com/89ad6a2d5b31b887546ed864be2167cc046f99afafc48fddfbc9942a7b6c4f6b/68747470733a2f2f696d6775722e636f6d2f32394c39694b542e6a7067"
+            }
+          ]
+        },
+        {
+          "name": "Jaw Left",
+          "pos": -1.0,
+          "examples": [
+            {
+              "type": "human",
+              "url": "https://camo.githubusercontent.com/fe7fd3d797c8cfe88c1694a8bfe650932daaa65e4a0ade8b9f57d3f05d4dd2b2/68747470733a2f2f696d6775722e636f6d2f787049794665362e6a7067"
+            },
+            {
+              "type": "furry",
+              "url": "https://google.com"
+            }
+          ]
+        }
+      ],
+      "defaultState": 0.0
+    }
+  }
+]
+}

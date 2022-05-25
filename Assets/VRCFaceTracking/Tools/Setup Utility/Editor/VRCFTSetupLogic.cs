@@ -59,6 +59,11 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 {
                     layer.BuildFloat(ref fxController);
                 }
+
+                if (shape.Type == ParamType.Binary)
+                {
+                    layer.BuildBinary(ref fxController, shape.originalParam.data.binaryRes.Value);
+                }
             }
         }
     }

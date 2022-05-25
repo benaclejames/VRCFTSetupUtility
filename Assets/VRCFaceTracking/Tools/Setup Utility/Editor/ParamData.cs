@@ -31,6 +31,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
         
         public readonly string Name;
         public readonly ParamType Type;
+        public readonly Parameter originalParam;
         public Identifier DefaultStep;
         public Dictionary<Identifier /*-1,0,1*/, List<MRBlendshapeSaveState>/*One for every renderer*/> AnimationSteps;
 
@@ -39,6 +40,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 
         public ParamData(Parameter param, List<MRBlendshapeSaveState> defaultValues)
         {
+            originalParam = param;
             Name = param.name;
             Type = (ParamType) param.type;
             var defaultStepVal = param.data.defaultState ?? 0.0f;
