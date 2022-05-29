@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -42,6 +43,9 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 },
                 defaultWeight = 1
             };
+            
+            if (AssetDatabase.GetAssetPath(controller) != string.Empty)
+                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(controller));
 
             var tree = new BlendTree
             {
@@ -51,6 +55,9 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 blendParameter = Name,
                 name = "FloatBlendTree"
             };
+            
+            if (AssetDatabase.GetAssetPath(layer.stateMachine) != string.Empty)
+                AssetDatabase.AddObjectToAsset(tree, AssetDatabase.GetAssetPath(layer.stateMachine));
 
             foreach (var clip in Clips)
                 tree.AddChild(clip.Value, clip.Key);
@@ -60,6 +67,9 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 name = "FloatBlendState",
                 motion = tree
             };
+            
+            if (AssetDatabase.GetAssetPath(layer.stateMachine) != string.Empty)
+                AssetDatabase.AddObjectToAsset(blendState, AssetDatabase.GetAssetPath(layer.stateMachine));
 
             layer.stateMachine.AddState(blendState, new Vector3(0, 0));
             layer.stateMachine.defaultState = blendState;
@@ -94,6 +104,11 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 defaultWeight = 1
             };
             
+            if (AssetDatabase.GetAssetPath(controller) != string.Empty)
+                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(controller));
+            
+            controller.AddLayer(layer);
+
             var maximumThresh = binaryRes - 1;
             var start = containsNegative ? maximumThresh * -1 : 0;
             // For every state, can start as negative depending on whether we're adding negative parameters
@@ -107,22 +122,33 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                     blendParameter = "BinaryBlend",
                     name = Name+i
                 };
-
-                if (i == 0) // If we're at the root state, we want all anims present
-                    foreach (var clip in Clips)
-                        tree.AddChild(clip.Value, Math.Abs(i-(clip.Key*maximumThresh)));
-                if (i < 0)  // If we're negative, we want all anims that are negative or zero
-                    foreach (var clip in Clips.Where(c => c.Key <= 0.0f))
-                        tree.AddChild(clip.Value, i-(clip.Key*maximumThresh));
-                else // Otherwise, we want all anims that are positive or zero
-                    foreach (var clip in Clips.Where(c => c.Key >= 0.0f))
-                        tree.AddChild(clip.Value, (clip.Key*maximumThresh) - i);
+                
+                if (AssetDatabase.GetAssetPath(layer.stateMachine) != string.Empty)
+                    AssetDatabase.AddObjectToAsset(tree, AssetDatabase.GetAssetPath(layer.stateMachine));
 
                 var blendState = new AnimatorState
                 {
                     name = Name+i,
                     motion = tree
                 };
+                
+                if (AssetDatabase.GetAssetPath(layer.stateMachine) != string.Empty)
+                    AssetDatabase.AddObjectToAsset(blendState, AssetDatabase.GetAssetPath(layer.stateMachine));
+
+                if (i == 0)
+                {
+                    // If we're at the root state, we want all anims present
+                    foreach (var clip in Clips)
+                        tree.AddChild(clip.Value, Math.Abs(i - (clip.Key * maximumThresh)));
+                    
+                    layer.stateMachine.defaultState = blendState;
+                }
+                else if (i < 0)  // If we're negative, we want all anims that are negative or zero
+                    foreach (var clip in Clips.Where(c => c.Key <= 0.0f))
+                        tree.AddChild(clip.Value, i-(clip.Key*maximumThresh));
+                else // Otherwise, we want all anims that are positive or zero
+                    foreach (var clip in Clips.Where(c => c.Key >= 0.0f))
+                        tree.AddChild(clip.Value, (clip.Key*maximumThresh) - i);
 
                 //TODO: Make this go in a spinny circle
                 var x = 0;
@@ -141,8 +167,6 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 else if (i > 0)
                     transition.AddCondition(AnimatorConditionMode.IfNot, 0, Name+"Negative");
             }
-            
-            controller.AddLayer(layer);
         }
     }
 }

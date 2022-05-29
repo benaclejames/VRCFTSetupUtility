@@ -64,6 +64,8 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 {
                     layer.BuildBinary(ref fxController, shape.originalParam.data.binaryRes.Value);
                 }
+                
+                AssetDatabase.SaveAssets();
             }
         }
     }

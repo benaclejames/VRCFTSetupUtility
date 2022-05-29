@@ -54,13 +54,13 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 
                 // Get the next param that needs data
                 var currentShape = _logic.ParamData.First(item => !item.IsAssigned());
-
-
-
+                
                 DisplaySetupStep(currentShape);
 
                 if (GUILayout.Button("Cancel"))
                 {
+                    foreach (var defaultState in currentShape.GetDefaultValues())
+                        defaultState.Restore();
                     _tex = null;
                     _isRecording = false;
                     return;
