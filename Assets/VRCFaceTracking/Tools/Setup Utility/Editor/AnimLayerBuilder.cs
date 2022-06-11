@@ -140,7 +140,13 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                     // If we're at the root state, we want all anims present
                     foreach (var clip in Clips)
                         tree.AddChild(clip.Value, Math.Abs(i - (clip.Key * maximumThresh)));
-                    
+
+                    layer.stateMachine.entryPosition = new Vector3
+                    (
+                        50,
+                        layer.stateMachine.anyStatePosition.y - 50 - (100 + binaryRes * 4)
+                    );
+
                     layer.stateMachine.defaultState = blendState;
                 }
                 else if (i < 0)  // If we're negative, we want all anims that are negative or zero
@@ -150,9 +156,8 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                     foreach (var clip in Clips.Where(c => c.Key >= 0.0f))
                         tree.AddChild(clip.Value, (clip.Key*maximumThresh) - i);
 
-                //TODO: Make this go in a spinny circle
-                var x = 0;
-                var y = i*20;
+                var x = layer.stateMachine.anyStatePosition.x - 20 - Mathf.Sin(i / (float)binaryRes * Mathf.PI) * (200 + binaryRes * 8);
+                var y = layer.stateMachine.anyStatePosition.y - 5 - Mathf.Cos(i / (float)binaryRes * Mathf.PI) * (100 + binaryRes * 4);
                 layer.stateMachine.AddState(blendState, new Vector3(x, y));
 
                 var transition = layer.stateMachine.AddAnyStateTransition(blendState);
