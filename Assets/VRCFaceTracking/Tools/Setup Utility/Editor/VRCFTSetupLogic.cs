@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 using VRC.SDK3.Avatars.Components;
+using VRCFaceTracking.Tools.Setup_Utility.Editor.LayerBuilders;
 
 namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 {
@@ -53,17 +54,19 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 AssetDatabase.SaveAssets();
 
                 // Add anim to layer
-                var layer = new AnimLayerBuilder(shape.Name, pair.Clips);
 
-                if (shape.Type == ParamType.Float)
+                AnimLayer animLayer = null;
+                switch (shape.Type)
                 {
-                    layer.BuildFloat(ref fxController);
+                    case ParamType.Float:
+                        animLayer = new LinearLayer(shape.Name, pair.Clips);
+                        break;
+                    case ParamType.Binary:
+                        animLayer = new DirectBinaryLayer(shape.Name, pair.Clips, shape.originalParam.data.binaryRes ?? 0);
+                        break;
                 }
-
-                if (shape.Type == ParamType.Binary)
-                {
-                    layer.BuildBinary(ref fxController, shape.originalParam.data.binaryRes.Value);
-                }
+                
+                animLayer?.Build(ref fxController);
                 
                 AssetDatabase.SaveAssets();
             }

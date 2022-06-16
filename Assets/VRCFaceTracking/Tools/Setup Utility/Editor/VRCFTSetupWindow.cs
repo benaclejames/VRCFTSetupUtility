@@ -38,7 +38,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                         typeof(VRCAvatarDescriptor), true);
 
                 paramMetaFile =
-                    (TextAsset) EditorGUILayout.ObjectField("Avatar Descriptor", paramMetaFile,
+                    (TextAsset) EditorGUILayout.ObjectField("Param Meta", paramMetaFile,
                         typeof(TextAsset), true);
 
                 // Create a button

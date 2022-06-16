@@ -5,80 +5,18 @@ using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace VRCFaceTracking.Tools.Setup_Utility.Editor
+namespace VRCFaceTracking.Tools.Setup_Utility.Editor.LayerBuilders
 {
-    public class AnimLayerBuilder
+    public class DirectBinaryLayer : AnimLayer
     {
-        public string Name;
-        public Dictionary<float, AnimationClip> Clips;
+        private readonly int _binaryResolution;
         
-        public AnimLayerBuilder(string name, Dictionary<float, AnimationClip> clips)
+        public DirectBinaryLayer(string name, Dictionary<float, AnimationClip> clips, int binaryResolution) : base(name, clips) => _binaryResolution = binaryResolution;
+
+        public override void Build(ref AnimatorController controller, bool createParam = true)
         {
-            Name = name;
-            Clips = clips;
-        }
-
-        public static void EnsureParam(ref AnimatorController controller, string name, AnimatorControllerParameterType type)
-        {
-            var containsParamAlready = false;
-            foreach (var param in controller.parameters)
-                if (param.name == name && param.type == type)
-                    containsParamAlready = true;
-                
-            if (!containsParamAlready)
-                controller.AddParameter(name, type);
-        }
-
-        public void BuildFloat(ref AnimatorController controller, bool createParam = true)
-        {
-            if (createParam)
-                EnsureParam(ref controller, Name, AnimatorControllerParameterType.Float);
-
-            var layer = new AnimatorControllerLayer
-            {
-                name = Name,
-                stateMachine = new AnimatorStateMachine
-                {
-                    hideFlags = HideFlags.HideInHierarchy
-                },
-                defaultWeight = 1
-            };
+            var maximumThresh = _binaryResolution - 1;
             
-            if (AssetDatabase.GetAssetPath(controller) != string.Empty)
-                AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(controller));
-
-            var tree = new BlendTree
-            {
-                blendType = BlendTreeType.Simple1D,
-                hideFlags = HideFlags.HideInHierarchy,
-                useAutomaticThresholds = false,
-                blendParameter = Name,
-                name = "FloatBlendTree"
-            };
-            
-            if (AssetDatabase.GetAssetPath(layer.stateMachine) != string.Empty)
-                AssetDatabase.AddObjectToAsset(tree, AssetDatabase.GetAssetPath(layer.stateMachine));
-
-            foreach (var clip in Clips)
-                tree.AddChild(clip.Value, clip.Key);
-
-            var blendState = new AnimatorState
-            {
-                name = "FloatBlendState",
-                motion = tree
-            };
-            
-            if (AssetDatabase.GetAssetPath(layer.stateMachine) != string.Empty)
-                AssetDatabase.AddObjectToAsset(blendState, AssetDatabase.GetAssetPath(layer.stateMachine));
-
-            layer.stateMachine.AddState(blendState, new Vector3(0, 0));
-            layer.stateMachine.defaultState = blendState;
-            
-            controller.AddLayer(layer);
-        }
-
-        public void BuildBinary(ref AnimatorController controller, int binaryRes, bool createParam = true)
-        {
             // Ensure we have the correct parameters created
             EnsureParam(ref controller, "BinaryBlend", AnimatorControllerParameterType.Float);
             
@@ -88,7 +26,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
 
             // Count in base2
             List<int> requiredBits = new List<int>();
-            for (int count = 1; count <= binaryRes-1; count *= 2)   // subtract 1 since 0 counts as a possible value
+            for (int count = 1; count <= maximumThresh; count *= 2)   // subtract 1 since 0 counts as a possible value
             {
                 requiredBits.Add(count);
                 EnsureParam(ref controller, Name+count, AnimatorControllerParameterType.Bool);
@@ -108,11 +46,10 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                 AssetDatabase.AddObjectToAsset(layer.stateMachine, AssetDatabase.GetAssetPath(controller));
             
             controller.AddLayer(layer);
-
-            var maximumThresh = binaryRes - 1;
+            
             var start = containsNegative ? maximumThresh * -1 : 0;
             // For every state, can start as negative depending on whether we're adding negative parameters
-            for (int i = start; i < binaryRes; i++)
+            for (int i = start; i < _binaryResolution; i++)
             {
                 var tree = new BlendTree
                 {
@@ -144,7 +81,7 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                     layer.stateMachine.entryPosition = new Vector3
                     (
                         50,
-                        layer.stateMachine.anyStatePosition.y - 50 - (100 + binaryRes * 4)
+                        layer.stateMachine.anyStatePosition.y - 50 - (100 + _binaryResolution * 4)
                     );
 
                     layer.stateMachine.defaultState = blendState;
@@ -156,8 +93,8 @@ namespace VRCFaceTracking.Tools.Setup_Utility.Editor
                     foreach (var clip in Clips.Where(c => c.Key >= 0.0f))
                         tree.AddChild(clip.Value, (clip.Key*maximumThresh) - i);
 
-                var x = layer.stateMachine.anyStatePosition.x - 20 - Mathf.Sin(i / (float)binaryRes * Mathf.PI) * (200 + binaryRes * 8);
-                var y = layer.stateMachine.anyStatePosition.y - 5 - Mathf.Cos(i / (float)binaryRes * Mathf.PI) * (100 + binaryRes * 4);
+                var x = layer.stateMachine.anyStatePosition.x - 20 - Mathf.Sin(i / (float)_binaryResolution * Mathf.PI) * (200 + _binaryResolution * 8);
+                var y = layer.stateMachine.anyStatePosition.y - 5 - Mathf.Cos(i / (float)_binaryResolution * Mathf.PI) * (100 + _binaryResolution * 4);
                 layer.stateMachine.AddState(blendState, new Vector3(x, y));
 
                 var transition = layer.stateMachine.AddAnyStateTransition(blendState);
